@@ -562,6 +562,10 @@ public final class Util {
     return true;
   }
 
+  public static boolean isWindows() {
+    return System.getProperty("os.name").toLowerCase().contains("windows");
+  }
+
   /**
    * Attempts to make a path relative to a particular directory.
    *
