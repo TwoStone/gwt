@@ -39,9 +39,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -260,9 +262,17 @@ public class ExternalPermutationWorkerFactory extends PermutationWorkerFactory {
     random.nextBytes(cookieBytes);
     String cookie = StringUtils.toHexString(cookieBytes);
 
-    // Cook up the classpath, main class, and extra args
-    args.addAll(Arrays.asList("-classpath",
-        ManagementFactory.getRuntimeMXBean().getClassPath(),
+    Map<String, String> environment = new HashMap<String, String>();
+    String classpath = ManagementFactory.getRuntimeMXBean().getClassPath();
+    // Avoid path too long errors on windows with the classpath
+    if (Util.isWindows()) {
+      environment.put("CLASSPATH", classpath);
+    } else {
+      args.addAll(Arrays.asList("-classpath", classpath));
+    }
+
+    // Cook up the main class, and extra args
+    args.addAll(Arrays.asList(
         CompilePermsServer.class.getName(), "-host", "localhost", "-port",
         String.valueOf(port), "-logLevel", logLevel.toString(), "-cookie",
         cookie));
@@ -276,6 +286,7 @@ public class ExternalPermutationWorkerFactory extends PermutationWorkerFactory {
     }
 
     ProcessBuilder builder = new ProcessBuilder();
+    builder.environment().putAll(environment);
     builder.command(args);
 
     try {
